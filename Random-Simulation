@@ -1,0 +1,70 @@
+import random
+import matplotlib.pyplot as plt
+from collections import Counter
+
+def simulate_reaction(particles):
+    article1 = random.randint(0, len(particles)-1)
+    particle1 = particles[article1]
+    particles.pop(article1)
+    
+    article2 = random.randint(0, len(particles)-1)
+    particle2 = particles[article2]
+    particles.pop(article2)
+    
+    if (particle1 == 'a' and particle2 == 'b') or (particle1 == 'b' and particle2 == 'a'):
+        particles.append('c')
+    elif (particle1 == 'a' and particle2 == 'c') or (particle1 == 'c' and particle2 == 'a'):
+        particles.append('b')
+    elif (particle1 == 'b' and particle2 == 'c') or (particle1 == 'c' and particle2 == 'b'):
+        particles.append('a')
+    else:
+        particles.append(particle1)
+        particles.append(particle2)
+
+def run_sim(n):
+    particles = ['a'] * n + ['b'] * n + ['c'] * n
+    while not all(particle == particles[0] for particle in particles):
+        simulate_reaction(particles)
+    return len(particles)
+
+def case_n(n, k):
+    lengths = []
+    for _ in range(k):
+        length = run_sim(n)
+        lengths.append(length)
+    return lengths
+
+def calculate_probability(lengths):
+    total = len(lengths)
+    freq = Counter(lengths)
+    return {key: value / total for key, value in freq.items()}
+
+def plot_stacked_bar(n_values, probabilities):
+    plt.figure(figsize=(10, 6))
+    bottom = None
+    for length in range(1, max(probabilities.keys()) + 1):
+        probs = [probabilities[n][length] if length in probabilities[n] else 0 for n in n_values]
+        plt.bar(n_values, probs, label=f'Length {length}', bottom=bottom)
+        if bottom is None:
+            bottom = probs
+        else:
+            bottom = [a + b for a, b in zip(bottom, probs)]
+
+    plt.xlabel('n values')
+    plt.ylabel('Probability')
+    plt.title('Probability of lengths for different n values')
+    plt.xticks(n_values)
+    plt.legend(loc='upper left', bbox_to_anchor=(1.02, 1))
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+t = 1000 # Number of simulations for each n
+n_values = range(1, 10)
+
+probabilities = {}
+for n in n_values:
+    results = case_n(n, t)
+    probabilities[n] = calculate_probability(results)
+
+plot_stacked_bar(n_values, probabilities)
