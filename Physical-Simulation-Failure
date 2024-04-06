@@ -1,0 +1,108 @@
+import random
+import math
+from tqdm import tqdm
+
+class Particle:
+    def __init__(self, ptype, box_width, box_height):
+        self.ptype = ptype
+        self.position = None
+        self.velocity = (random.uniform(-1, 1), random.uniform(-1, 1))
+        self.box_width = box_width
+        self.box_height = box_height
+
+    def move(self):
+        # Update position based on velocity
+        new_x = self.position[0] + self.velocity[0]
+        new_y = self.position[1] + self.velocity[1]
+        # Ensure particle stays within the box boundaries
+        if 0 <= new_x <= self.box_width:
+            self.position = (new_x, self.position[1])
+        else:
+            self.velocity = (-self.velocity[0], self.velocity[1])  # Reverse velocity upon hitting box edge
+        if 0 <= new_y <= self.box_height:
+            self.position = (self.position[0], new_y)
+        else:
+            self.velocity = (self.velocity[0], -self.velocity[1])  # Reverse velocity upon hitting box edge
+
+class Box:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.particles = []
+
+    def add_particle(self, particle):
+        particle.position = (random.uniform(0, self.width), random.uniform(0, self.height))
+        self.particles.append(particle)
+
+    def check_collisions(self):
+        particles_to_remove = []
+        for i in range(len(self.particles)):
+            for j in range(i, len(self.particles)):
+                particle1 = self.particles[i]
+                particle2 = self.particles[j]
+                if particle1 != particle2:  # Avoid checking a particle against itself
+                    distance = math.sqrt((particle1.position[0] - particle2.position[0]) ** 2 +
+                                         (particle1.position[1] - particle2.position[1]) ** 2)
+                    if distance < 1:  # Decrease collision threshold for more frequent collisions
+                        # Handle collision by changing particles to a third type
+                        if particle1.ptype != particle2.ptype:  # If particles are of different types
+                            new_type = {'A', 'B', 'C'} - {particle1.ptype, particle2.ptype}  # Determine the new type
+                            particle1.ptype = new_type.pop()  # Change particle types
+                            particle2.ptype = new_type.pop() if new_type else particle1.ptype  # Set same type
+                        # Collect particles to remove if they are of the same type
+                        else:
+                            particles_to_remove.append(particle2)
+        # Remove collected particles outside of the loop
+        for particle in particles_to_remove:
+            if particle in self.particles:
+                self.particles.remove(particle)
+
+
+
+def generate_particles(n, box_width, box_height):
+    particles = []
+    for ptype in ['A', 'B', 'C']:
+        for _ in range(n):
+            particle = Particle(ptype, box_width, box_height)
+            particles.append(particle)
+    return particles
+
+def main(num_simulations):
+    box_width = 5  # Smaller box width
+    box_height = 5  # Smaller box height
+    num_particles_per_type = 1
+
+    probabilities = {'A': 0, 'B': 0, 'C': 0}  # Dictionary to store probabilities
+
+    with tqdm(total=num_simulations, desc="Simulations", unit="simulation") as pbar_simulations:
+        for _ in range(num_simulations):
+            box = Box(box_width, box_height)
+            particles = generate_particles(num_particles_per_type, box_width, box_height)
+
+            for particle in particles:
+                box.add_particle(particle)
+
+            iteration = 0
+            last_type = None
+            while len(box.particles) > 1:
+                for particle in box.particles:
+                    particle.move()
+                box.check_collisions()
+                iteration += 1
+                last_type = box.particles[0].ptype
+
+            probabilities[last_type] += 1  # Increment the count for the last particle type
+            pbar_simulations.update(1)
+
+    # Calculate probabilities
+    total_simulations = num_simulations
+    for particle_type, count in probabilities.items():
+        probabilities[particle_type] = count / total_simulations
+
+    print("Probability of each particle being the last:")
+    for particle_type, probability in probabilities.items():
+        print(f"Particle type {particle_type}: {probability}")
+
+if __name__ == "__main__":
+    num_simulations = 100  # Number of simulations to run
+    main(num_simulations)
