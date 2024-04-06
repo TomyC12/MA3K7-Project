@@ -1,0 +1,68 @@
+from tabulate import tabulate
+import numpy as np
+import matplotlib.pyplot as plt
+
+n = 8
+
+# Define the equation (example: y = x*(x-1))
+def product_eq(x):
+    product = 1
+    for i in range(0, x):
+        product *= (x - i) ** 2 / (3 * x ** 2 - 2 * i * x - i ** 2)
+    return 3 * product
+
+def one_cycle(y):
+    cycle = 1
+    for i in range(0, y-1):
+        cycle *= (2 * (y-i) ** 3 - 2 * (y-i)) / (9 * (y-i) ** 3 - 18 * (y-i) ** 2 + 5 * (y-i) + 4)
+    return cycle
+
+def product_eq2(x,k):
+    product = 1
+    for i in range(0, k):
+        product *= (k - i) ** 2 / (3 * k ** 2 - 2 * i * k - i ** 2)
+    return 3 * product
+
+def one_cycle2(y,k):
+    cycle = 1
+    for i in range(0, y-k):
+        cycle *= (2 * (y-i) ** 3 - 2 * (y-i)) / (9 * (y-i) ** 3 - 18 * (y-i) ** 2 + 5 * (y-i) + 4)
+    return cycle
+
+
+def calculate_formula(n, k):
+    return one_cycle2(n,k)*product_eq2(n,k)
+
+# Calculate y values using the equation
+y_values = []
+y_values2 = []
+y_values3 = []
+x_values = []
+
+for j in range(1, n+1):
+    y_values.append(product_eq(j))
+    y_values2.append(one_cycle(j))
+    x_values.append(j)
+    
+for n in range(1, 9):
+    ksum = 0
+    for k in range(2, n):
+        ksum += calculate_formula(n, k)
+    y_values3.append(ksum)
+
+# Remove the double counting for n=1
+y_values2[0] = 0
+print(y_values)
+print(y_values2)
+print(y_values3)
+
+# Plot the bar graph
+plt.bar(x_values, y_values, label='Process B')
+plt.bar(x_values, y_values2, bottom=y_values, label='Process A')
+plt.bar(x_values, y_values3, bottom=y_values2, label='Process C')
+
+# Adding labels and title
+plt.ylabel('Probability')
+plt.xlabel('n Values')
+plt.title('Bar Graph')
+plt.legend()
