@@ -1,0 +1,69 @@
+from itertools import permutations
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+def generate_permutations(n):
+    all_permutations = set()
+    for k in range(n):
+        # Create the list with 'A' in the last position and 'B' and 'C' in any order
+        elements = ['B'] * k + ['C'] * k + ['A'] * (n-1)
+        # Generate permutations
+        permuted = permutations(elements)
+        
+        # Append 'A' to each permutation and add to the set of all permutations
+        for perm in permuted:
+            all_permutations.add(perm + ('A',))
+    
+    return all_permutations
+
+def update_denom(n, i, j, k):
+    return n + k - i - j, n - k - i + j, n - k + i - j
+
+def prob_A(x, y, z):
+    return y * z / ((x * y) + (x * z) + (y * z))
+
+def prob_B(x, y, z):
+    return x * z / ((x * y) + (x * z) + (y * z))
+
+def prob_C(x, y, z):
+    return x * y / ((x * y) + (x * z) + (y * z))
+
+def prob_calc(n):
+    sumprob = [0] * (3 * n)
+
+    # Use tqdm to create a progress bar
+    for perm in tqdm(permutations):
+        length = len(perm)
+        prob = 1
+        i = 0
+        j = 0
+        k = 0
+        for r in range(0, length):
+            x, y, z = update_denom(n, i, j, k)
+            if ((x * y) + (x * z) + (y * z) < 1):
+                prob = 0
+                break
+            if perm[r] == 'A':
+                prob *= prob_A(x, y, z)
+                k += 1
+            if perm[r] == 'B':
+                prob *= prob_B(x, y, z)
+                j += 1
+            if perm[r] == 'C':
+                prob *= prob_C(x, y, z)
+                i += 1
+        update_sum = sumprob[length] + prob
+        sumprob[length] = update_sum 
+
+    # Prepare table data
+    table_data = [[idx, 3 * prob] for idx, prob in enumerate(sumprob)]
+
+    # Display table
+    print(tabulate(table_data, headers=['Collisions', 'Sum of Probabilities'], tablefmt='grid'))
+    
+    return sumprob
+
+n = 5
+permutations = generate_permutations(n)
+sumprob5 = prob_calc(n)
