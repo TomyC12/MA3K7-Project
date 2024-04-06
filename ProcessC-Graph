@@ -1,0 +1,29 @@
+def product_eq2(x,k):
+    product = 1
+    for i in range(0, k):
+        product *= (k - i) ** 2 / (3 * k ** 2 - 2 * i * k - i ** 2)
+    return 3 * product
+
+def one_cycle2(y,k):
+    cycle = 1
+    for i in range(0, y-k):
+        cycle *= (2 * (y-i) ** 3 - 2 * (y-i)) / (9 * (y-i) ** 3 - 18 * (y-i) ** 2 + 5 * (y-i) + 4)
+    return cycle
+
+def calculate_formula(n, k):
+    return one_cycle2(n,k)*product_eq2(n,k)
+    
+for n in range(2, 9):
+    plotting=0
+    for k in range(2, n):
+        result = calculate_formula(n, k)
+        plt.bar(n, result, bottom=plotting, label=k, color=f'C{k-2}')
+        plotting += result
+        print(f"For n={n} and k={k}, the result is: {result}")
+        
+plt.xlabel('n')
+plt.ylabel('Probability')
+plt.title('Stacked Bar Graph for k-Values At Each n')
+plt.legend(loc='upper left', bbox_to_anchor=(1.02, 1))
+
+plt.show()
